@@ -10,7 +10,8 @@ const orderValidator = z.object({
   price: z.number({
     required_error: 'price is required',
     invalid_type_error: 'price must be a number',
-  }),
+  }), 
+  
   quantity: z
     .number({
       required_error: 'quantity is required',
