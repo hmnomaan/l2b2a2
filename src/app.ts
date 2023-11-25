@@ -17,7 +17,7 @@ app.get('/', (req: Request, res: Response) => {
 });
 app.use('/api/users', UserRoutes);
 
-// not found -- 404
+// not found for missing routes-- 404
 app.all('*', (req: Request, res: Response) => {
   res.status(404).json({
     success: false,

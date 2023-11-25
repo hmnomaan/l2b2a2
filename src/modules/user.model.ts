@@ -1,5 +1,6 @@
 import { Schema, model } from 'mongoose';
 import bcrypt from 'bcrypt';
+import config from '../app/config/index';
 import {
   TAddress,
   TFullName,
@@ -7,7 +8,7 @@ import {
   TUser,
   UserModel,
 } from './user/user.interface';
-import config from '../app/config/index';
+
 
 const fullNameSchema = new Schema<TFullName, UserModel>({
   firstName: { type: String, required: true, trim: true },
@@ -39,12 +40,12 @@ const userSchema = new Schema<TUser>({
   orders: { type: [orderSchema] },
 });
 
-//find a single user by  userId
+ // finding a single user by  userId
 userSchema.statics.findByUserId = function (userId: number) {
   return this.findOne({ userId });
 };
 
-// hashing password, before save it to database
+ // hashing password, before save it to database
 userSchema.pre('save', async function (next) {
   this.password = await bcrypt.hash(this.password, Number(config.bcrypt_salt_rounds));
   next();

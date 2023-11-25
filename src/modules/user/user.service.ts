@@ -1,21 +1,21 @@
 import User from '../user.model';
 import { TOrder, TUser } from './user.interface';
 
-// fetch all users from database
+//fetch all users from Database
 const getAllUsersFromDB = async () => {
   return await User.find({}).select(
     '-password -__v -orders -hobbies -isActive -_id -fullName._id -address._id',
   );
 };
 
-// fetch single users from database
+//fetch single users from Database
 const getSingleUserFromDB = async (userId: number) => {
   return await User.findOne({ userId }).select(
     '-password -__v -orders -_id -fullName._id -address._id',
   );
 };
 
-// create new user and save in database
+ //create new user and save in Database
 const createUser = async (user: TUser) => {
   return await User.create(user);
 };

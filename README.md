@@ -1,4 +1,4 @@
-*"#L2B2A2 -- assignment 2  :: Mission2"*
+# L2B2A2 -- assignment 2  :: Mission2 #
 
 **#Live Server: https://assignment2-six-sigma.vercel.app/**
 
