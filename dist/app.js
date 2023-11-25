@@ -14,7 +14,10 @@ app.use((0, cors_1.default)());
 //app routes
 app.use('/', user_routes_1.UserRoutes);
 const getAController = (req, res) => {
-    res.send("Server running");
+    res.status(200).json({
+        status: 'success',
+        message: 'Welcome to the user and Order management server',
+    });
 };
 app.get('/', getAController);
 exports.default = app;

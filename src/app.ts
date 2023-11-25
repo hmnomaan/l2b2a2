@@ -1,4 +1,4 @@
-import express,{Request,Response} from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { UserRoutes } from './modules/user/user.routes';
 const app = express();
@@ -11,9 +11,10 @@ app.use(cors());
 app.use('/', UserRoutes);
 
 const getAController = (req: Request, res: Response) => {
-  
-
-  res.send("Server running");
+  res.status(200).json({
+    status: 'success',
+    message: 'Welcome to the user and Order management server',
+  });
 };
 app.get('/', getAController);
 
