@@ -12,7 +12,7 @@ app.use('/', UserRoutes);
 
 const getAController = (req: Request, res: Response) => {
   res.status(200).json({
-    status: 'success',
+    status: 'success ok',
     message: 'Welcome to the user and Order management server',
   });
 };

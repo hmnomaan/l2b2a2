@@ -15,7 +15,7 @@ app.use((0, cors_1.default)());
 app.use('/', user_routes_1.UserRoutes);
 const getAController = (req, res) => {
     res.status(200).json({
-        status: 'success',
+        status: 'success ok',
         message: 'Welcome to the user and Order management server',
     });
 };
