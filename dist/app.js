@@ -12,5 +12,9 @@ const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, cors_1.default)());
 //app routes
-app.use('/api/users', user_routes_1.UserRoutes);
+app.use('/', user_routes_1.UserRoutes);
+const getAController = (req, res) => {
+    res.send("Server running");
+};
+app.get('/', getAController);
 exports.default = app;
