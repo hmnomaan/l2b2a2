@@ -78,7 +78,7 @@ const getSingleUser = async (req: Request, res: Response) => {
 const updateExistingUser = async (req: Request, res: Response) => {
   try {
     const userId = Number(req.params.userId);
-    const updatedUser = req.body;
+    const updatedUser= req.body;
 
     // if password updated then hash it, before update
     if (updatedUser.password) {
@@ -96,6 +96,7 @@ const updateExistingUser = async (req: Request, res: Response) => {
         success: true,
         message: 'User updated Successfully',
         data: user,
+        updatedInput: updatedUser,
       });
     } else {
       return res.status(404).json({
