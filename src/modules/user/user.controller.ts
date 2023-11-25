@@ -91,7 +91,7 @@ const updateExistingUser = async (req: Request, res: Response) => {
       const user = await User.findOne({ userId }).select(
         '-password -orders -_id -__v -fullName._id -address._id',
       );
-
+//updated response
       return res.status(200).json({
         success: true,
         message: 'User updated Successfully',
