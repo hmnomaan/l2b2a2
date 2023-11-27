@@ -1,21 +1,28 @@
-import express, { Request, Response } from 'express';
+import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
-import { UserRoutes } from './modules/user/user.routes';
-const app = express();
+import UserRoutes from './modules/user/user.routes';
 
-// const port = 3000;
-//parser
+const app: Application = express();
+
+//parser middleware
 app.use(express.json());
 app.use(cors());
-//app routes
-app.use('/api/users/', UserRoutes);
 
-const getAController = (req: Request, res: Response) => {
+//application routes
+app.get('/', (req: Request, res: Response) => {
   res.status(200).json({
-    status: 'success ok',
+    status: 'success',
     message: 'Welcome to the user and Order management server',
   });
-};
-app.get('/', getAController);
+});
+app.use('/api/users', UserRoutes);
+
+// not found -- 404
+app.all('*', (req: Request, res: Response) => {
+  res.status(404).json({
+    success: false,
+    message: '404! Route Not found.',
+  });
+});
 
 export default app;

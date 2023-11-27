@@ -1,75 +1,235 @@
 import { Request, Response } from 'express';
-import { UserServices } from './user.service';
+import User from '../user.model';
+import userServices from './user.service';
+import { TUserPartial } from './user.interface';
+import userValidator from './user.validator';
+import orderValidator from './order.validator';
+import hash from '../../app/config/hash';
 
-const createUser = async (req: Request, res: Response) => {
+
+const createNewUser = async (req: Request, res: Response) => {
   try {
-    const { user: userData } = req.body;
+    // validating the User data 
+    const validatedUser = userValidator.parse(req.body);
 
-    const result = await UserServices.createUserIntoDB(userData);
+    const user = await userServices.createUser(validatedUser);
 
-    res.status(200).json({
+    //removing the unwanted fields
+    const tempUser: TUserPartial = JSON.parse(JSON.stringify(user));
+    delete tempUser.password;
+    delete tempUser.orders;
+
+    res.status(201).json({
       success: true,
-      message: 'User is created successfully',
-      data: result,
+      message: 'User created Successfully',
+      data: tempUser,
     });
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: 'Failed to create new user!', error });
   }
 };
 
-const getAllUsers = async (req: Request, res: Response) => {
+const getAllUsers = async (_req: Request, res: Response) => {
   try {
-    const result = await UserServices.getAllUsersFromDB();
+    const users = await userServices.getAllUsersFromDB();
+
     res.status(200).json({
       success: true,
-      message: 'Users are retrieved successfully',
-      data: result,
+      message: 'Users fetched Successfully',
+      data: users, 
     });
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error Occurred!', error });
   }
 };
+
 const getSingleUser = async (req: Request, res: Response) => {
   try {
-    const { userId } = req.params;
-    const result = await UserServices.getSingleUserFromDB(userId);
-    res.status(200).json({
-      success: true,
-      message: 'User is retrieved successfully',
-      data: result,
-    });
-  } catch (err) {
-    console.log(err);
+    const userId = Number(req.params.userId);
+
+    if (await User.findByUserId(userId)) {
+      const users = await userServices.getSingleUserFromDB(userId);
+
+      return res.status(200).json({
+        success: true,
+        message: 'User fetched Successfully',
+        data: users,
+      });
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+        error: {
+          code: 404,
+          description: 'User not found!',
+        },
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error Occurred!', error });
   }
 };
-// const updateSingleUser = async (req: Request, res: Response) => {
-//   try {
-//     const { userId } = req.params;
-//     const updateData = req.body;
-//     const updateResult = await UserServices.updateSingleUserFromDB(
-//       userId,
-//       updateData,
-//       {
-//         new: true
-//       },
-//     );
 
-//     if (!updateResult) {
-//       return res.status(404).json({ message: 'User not found' });
-//     }
-//     res.status(200).json({
-//       success: true,
-//       message: 'User is updated successfully',
-//       data: updateResult,
-//     });
-//   } catch (err) {
-//     console.log(err);
-//   }
-// };
 
-export const UserControllers = {
-  createUser,
+
+const deleteExistingUser = async (req: Request, res: Response) => {
+  try {
+    const userId = Number(req.params.userId);
+
+    if (await User.findByUserId(userId)) {
+      await userServices.deleteUser(userId);
+
+      return res.status(200).json({
+        success: true,
+        message: 'User deleted Successfully',
+        data: null,
+      });
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+        error: {
+          code: 404,
+          description: 'User not found!',
+        },
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error Occurred!', error });
+  }
+};
+
+const updateExistingUser = async (req: Request, res: Response) => {
+  try {
+    const userId = Number(req.params.userId);
+    const updatedUser = req.body;
+
+    // if password updated then hash it, before update
+    if (updatedUser.password) {
+      updatedUser.password = await hash(updatedUser.password);
+    }
+
+    if (await User.findByUserId(userId)) {
+      await userServices.updateUser(userId, updatedUser);
+
+      const user = await User.findOne({ userId }).select(
+        '-password -orders -_id -__v -fullName._id -address._id',
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: 'User updated Successfully',
+        data: user,
+      });
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+        error: {
+          code: 404,
+          description: 'User not found!',
+        },
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error Occurred!', error });
+  }
+};
+
+const createOrder = async (req: Request, res: Response) => {
+  try {
+    const userId = Number(req.params.userId);
+
+    // validating the data of Order, which is coming from request body
+    const validatedOrder = orderValidator.parse(req.body);
+
+    if (await User.findByUserId(userId)) {
+      await userServices.createOrderOfUser(userId, validatedOrder);
+
+      return res.status(201).json({
+        success: true,
+        message: 'Order created successfully!',
+        data: null,
+      });
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+        error: {
+          code: 404,
+          description: 'User not found!',
+        },
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error Occurred!', error });
+  }
+};
+
+const getOrders = async (req: Request, res: Response) => {
+  try {
+    const userId = Number(req.params.userId);
+
+    if (await User.findByUserId(userId)) {
+      const orders = await userServices.getAllOrdersOfUser(userId);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Order fetched successfully!',
+        data: orders,
+      });
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+        error: {
+          code: 404,
+          description: 'User not found!',
+        },
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error Occurred!', error });
+  }
+};
+
+const totalPrice = async (req: Request, res: Response) => {
+  try {
+    const userId = Number(req.params.userId);
+    if (await User.findByUserId(userId)) {
+      const result = await userServices.calculatedTotalPrice(userId);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Total price calculated successfully!',
+        data: result.length > 0 ? result[0] : { totalPrice: 0 },
+      });
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+        error: {
+          code: 404,
+          description: 'User not found!',
+        },
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error Occurred!', error });
+  }
+};
+
+const userController = {
   getAllUsers,
   getSingleUser,
-  // updateSingleUser,
+  createNewUser,
+  deleteExistingUser,
+  updateExistingUser,
+  createOrder,
+  getOrders,
+  totalPrice,
 };
+
+export default userController;

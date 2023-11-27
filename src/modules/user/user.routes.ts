@@ -1,13 +1,16 @@
-import express from 'express';
-import { UserControllers } from './user.controller';
+import { Router } from 'express';
+import userController from './user.controller';
 
-const router = express.Router();
+const UserRoutes = Router();
+//user crud routes
+UserRoutes.post('/', userController.createNewUser);
+UserRoutes.get('/', userController.getAllUsers);
+UserRoutes.get('/:userId', userController.getSingleUser);
+UserRoutes.put('/:userId', userController.updateExistingUser);
+UserRoutes.delete('/:userId', userController.deleteExistingUser);
+//order routes
+UserRoutes.put('/:userId/orders', userController.createOrder);
+UserRoutes.get('/:userId/orders', userController.getOrders);
+UserRoutes.get('/:userId/orders/total-price', userController.totalPrice);
 
-//will call controller
-router.post('/', UserControllers.createUser);
-router.get('/', UserControllers.getAllUsers);
-router.get('/:userId', UserControllers.getSingleUser);
-// //update-route
-// router.put('/:userId', UserControllers.updateSingleUser);
-
-export const UserRoutes = router;
+export default UserRoutes;

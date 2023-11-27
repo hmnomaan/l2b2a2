@@ -1,71 +1,55 @@
 import { Schema, model } from 'mongoose';
-import { FullName, User, Address, Order } from './user/user.interface';
+import bcrypt from 'bcrypt';
+import {
+  TAddress,
+  TFullName,
+  TOrder,
+  TUser,
+  UserModel,
+} from './user/user.interface';
+import config from '../app/config/index';
 
-// Define interfaces for subdocuments
-
-const FullNameSchema: Schema = new Schema<FullName>({
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
+const fullNameSchema = new Schema<TFullName, UserModel>({
+  firstName: { type: String, required: true, trim: true },
+  lastName: { type: String, required: true, trim: true },
 });
 
-const AddressSchema: Schema =
-  new Schema<
-  Address>({
-    street: { type: String, required: true },
-    city: { type: String, required: true },
-    country: { type: String, required: true },
-  });
-
-const OrderSchema: Schema =
-  new Schema<
-  Order>({
-    productName: { type: String, required: true },
-    price: { type: Number, required: true },
-    quantity: { type: Number, required: true },
-  });
-
-const UserSchema: Schema = new Schema<User>({
-  userId: { type: Number, required: true },
-    username: {
-        type: String,
-        required: true
-    },
-    password: {
-        type: String,
-        required: true
-    },
-    fullName: {
-        type: FullNameSchema,
-        required: true
-    },
-    age: {
-        type: Number,
-        required: true
-    },
-    email: {
-        type: String,
-        required: true
-    },
-    isActive: {
-        type: Boolean,
-        required: true
-    },
-    hobbies: [
-        {
-            type: String,
-            required: true
-        }],
-    address: {
-        type: AddressSchema,
-        required: true
-    },
-    orders: [
-        {
-            type: OrderSchema,
-            required: true
-        }],
+const addressSchema = new Schema<TAddress>({
+  street: { type: String, required: true, trim: true },
+  city: { type: String, required: true, trim: true },
+  country: { type: String, required: true, trim: true },
 });
 
-const UserModel = model<User>('User', UserSchema);
+const orderSchema = new Schema<TOrder>({
+  productName: { type: String, required: true, trim: true },
+  price: { type: Number, required: true, trim: true },
+  quantity: { type: Number, required: true, trim: true },
+});
 
-export default UserModel;
+const userSchema = new Schema<TUser>({
+  userId: { type: Number, required: true, unique: true },
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  fullName: { type: fullNameSchema, required: true },
+  age: { type: Number, required: true },
+  email: { type: String, required: true, unique: true, lowercase: true },
+  isActive: { type: Boolean, required: true },
+  hobbies: [{ type: String }],
+  address: { type: addressSchema, required: true },
+  orders: { type: [orderSchema] },
+});
+
+//find a single user by  userId
+userSchema.statics.findByUserId = function (userId: number) {
+  return this.findOne({ userId });
+};
+
+// hashing password, before save it to database
+userSchema.pre('save', async function (next) {
+  this.password = await bcrypt.hash(this.password, Number(config.bcrypt_salt_rounds));
+  next();
+});
+
+const User = model<TUser, UserModel>('user', userSchema);
+
+export default User;
